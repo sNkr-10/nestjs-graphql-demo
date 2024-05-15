@@ -42,7 +42,7 @@ services:
     env_file:
       - .env
     restart: unless-stopped
-
+    network_mode: host
 volumes: 
   postgres-data:
   nestjs-graphql_node_modules:
