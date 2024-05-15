@@ -1,0 +1,60 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+input CreateUserInput {
+  email: String!
+  name: String!
+  password: String!
+}
+
+type LoginUser {
+  token: String!
+  user: User!
+}
+
+input LoginUserInput {
+  email: String!
+  password: String!
+}
+
+type Mutation {
+  deleteUser(id: Int!): User!
+  loginUser(loginUserInput: LoginUserInput!): LoginUser!
+  signUp(createUserInput: CreateUserInput!): User!
+  updateUser(updateUserInput: UpdateUserInput!): User!
+}
+
+type Query {
+  user(id: Int!): User!
+  userListData(userListInput: UserListInput!): UserList!
+}
+
+type Subscription {
+  userCount: Int!
+}
+
+input UpdateUserInput {
+  email: String
+  id: Int!
+  name: String
+}
+
+type User {
+  createdAt: String!
+  email: String!
+  id: Int!
+  name: String!
+  updatedAt: String!
+}
+
+type UserList {
+  count: Int!
+  users: [User!]!
+}
+
+input UserListInput {
+  limit: Int! = 10
+  page: Int! = 1
+  search: String! = ""
+}
