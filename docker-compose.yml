@@ -16,6 +16,7 @@ services:
       - postgres-data:/var/lib/postgresql/data
     ports:
       - '5432:5432'
+    network_mode: host
 
   pgadmin:
     container_name: pgadmin
@@ -28,6 +29,8 @@ services:
       - PGADMIN_DEFAULT_EMAIL=root@root.com
       - PGADMIN_DEFAULT_PASSWORD=root
     restart: unless-stopped
+    network_mode: host
+    
 
   nestjs-graphql-prisma-backend:
     container_name: backend

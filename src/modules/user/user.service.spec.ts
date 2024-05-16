@@ -7,6 +7,7 @@ import * as checkHashedPassword from '../../lib/utils/checkHashedPassword';
 import * as auth from '../../lib/utils/auth';
 import { UserListInput } from './dto/user-list.input';
 import { UpdateUserInput } from './dto/update-user.input';
+import { GraphQLError } from 'graphql';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -93,10 +94,29 @@ describe('UserService', () => {
     it('should create a new user with hashed password and salt', async () => {
       const createUserInput: CreateUserInput = {
         name: 'John Doe',
-        email: 'johndoe@example1.com',
+        email: 'johndoe1111@example1.com',
         password: 'Password@123',
       };
       const createdUser = {
+        id: 1,
+        name: 'John Doe',
+        email: 'johndoe1111@example1.com',
+        password: 'hashed-password',
+        salt: 'some-salt',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      jest.spyOn(prisma.user, 'findUnique').mockResolvedValue(null);
+      jest.spyOn(prisma.user, 'create').mockResolvedValue(createdUser);
+      expect(await userService.signUp(createUserInput)).toBe(createdUser);
+    });
+    it('should throw an error if email already exists', async () => {
+      const createUserInput: CreateUserInput = {
+        name: 'John Doe',
+        email: 'test@test.com',
+        password: 'Password@123',
+      };
+      jest.spyOn(prisma.user, 'findUnique').mockResolvedValue({
         id: 1,
         name: 'John Doe',
         email: 'test@test.com',
@@ -104,9 +124,11 @@ describe('UserService', () => {
         salt: 'some-salt',
         createdAt: new Date(),
         updatedAt: new Date(),
-      };
-      jest.spyOn(prisma.user, 'create').mockResolvedValue(createdUser);
-      expect(await userService.signUp(createUserInput)).toBe(createdUser);
+      });
+      jest.spyOn(prisma.user, 'create').mockResolvedValue(null);
+      await expect(userService.signUp(createUserInput)).rejects.toThrow(
+        GraphQLError,
+      );
     });
   });
 
@@ -135,6 +157,40 @@ describe('UserService', () => {
         user: (({ salt, password, ...rest }) => rest)(user),
         token: 'access-token',
       });
+    });
+
+    it('should throw an error if the password is invalid', async () => {
+      const loginUserInput: LoginUserInput = {
+        email: 'test@test.com',
+        password: 'InvalidPassword',
+      };
+      const user = {
+        id: 1,
+        name: 'John Doe',
+        email: 'test@test.com',
+        password: 'hashed-password',
+        salt: 'some-salt',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      jest.spyOn(prisma.user, 'findUnique').mockResolvedValue(user);
+      jest
+        .spyOn(checkHashedPassword, 'checkHashedPassword')
+        .mockReturnValue(false);
+      await expect(userService.loginUser(loginUserInput)).rejects.toThrow(
+        GraphQLError,
+      );
+    });
+
+    it('should throw an error if the email is invalid', async () => {
+      const loginUserInput: LoginUserInput = {
+        email: 'invalid@test.com',
+        password: 'Password@123',
+      };
+      jest.spyOn(prisma.user, 'findUnique').mockResolvedValue(null);
+      await expect(userService.loginUser(loginUserInput)).rejects.toThrow(
+        GraphQLError,
+      );
     });
   });
 

@@ -14,4 +14,4 @@ COPY ./src src
 
 RUN npx prisma generate
 
-CMD ["pnpm", "run", "start"]
+CMD ["sh", "-c", "npx prisma migrate deploy && pnpm run start"]

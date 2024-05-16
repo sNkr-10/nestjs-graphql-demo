@@ -30,19 +30,21 @@ export class UserService {
     };
   }
   async signUp(createUserInput: CreateUserInput) {
-    try {
-      const { salt, hashedPassword } = hashPassword(createUserInput.password);
-      createUserInput.password = hashedPassword;
-      const user = await this.prisma.user.create({
-        select: this.SELECT_CLAUSE,
-        data: { ...createUserInput, salt },
-      });
-      const count = await this.prisma.user.count();
-      pubSub.publish('userCount', { userCount: count });
-      return user;
-    } catch (e) {
-      throw new Error(e.message);
+    const ifUserExists = await this.prisma.user.findUnique({
+      where: { email: createUserInput.email },
+    });
+    if (ifUserExists) {
+      throw new GraphQLError('User already exists');
     }
+    const { salt, hashedPassword } = hashPassword(createUserInput.password);
+    createUserInput.password = hashedPassword;
+    const user = await this.prisma.user.create({
+      select: this.SELECT_CLAUSE,
+      data: { ...createUserInput, salt },
+    });
+    const count = await this.prisma.user.count();
+    pubSub.publish('userCount', { userCount: count });
+    return user;
   }
 
   async loginUser(loginUserInput: LoginUserInput) {
